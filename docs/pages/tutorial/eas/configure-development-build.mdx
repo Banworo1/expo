@@ -1,206 +1,1969 @@
----
-title: Configure a development build in cloud
-sidebar_title: Configure development build
-description: Learn how to configure a development build for a project using EAS Build.
-hasVideoLink: true
----
+import React, { useState } from 'react';
 
-import { Collapsible } from '~/ui/components/Collapsible';
-import { ContentSpotlight } from '~/ui/components/ContentSpotlight';
-import { ProgressTracker } from '~/ui/components/ProgressTracker';
-import { Terminal } from '~/ui/components/Snippet';
-import { Step } from '~/ui/components/Step';
-import { CODE } from '~/ui/components/Text';
-import { VideoBoxLink } from '~/ui/components/VideoBoxLink';
+// Composant principal de l'application SolvMe
+export default function App() {
+  // État pour gérer la page actuelle
+  const [currentPage, setCurrentPage] = useState('home');
+  // États pour les données partagées entre les écrans
+  const [problemDescription, setProblemDescription] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [selectedExpert, setSelectedExpert] = useState(null); // Pour stocker l'expert sélectionné
 
-In this chapter, we'll set up and configure a development build with EAS for our example app.
+  // Fonction pour naviguer vers l'écran de diagnostic IA
+  const handleDescribeProblem = () => {
+    setCurrentPage('diagnostic');
+  };
 
-<VideoBoxLink videoId="uQCE9zl3dXU" title="Watch: How to configure a development build" />
+  // Fonction pour naviguer vers l'espace utilisateur
+  const handleGoToUserSpace = () => {
+    setCurrentPage('userSpace');
+  };
 
----
+  // Fonction pour naviguer vers l'écran des experts
+  const handleGoToExperts = () => {
+    setCurrentPage('expertConsultation');
+  };
 
-## Understanding development builds
+  // Fonction pour naviguer vers l'écran des tarifs
+  const handleGoToPricing = () => {
+    setCurrentPage('pricing');
+  };
 
-Let's start by learning about what are development builds and why we need them.
+  // Fonction appelée pour le login (Google, email, numéro) - Placeholder
+  const handleLogin = (method) => {
+    console.log(`Connexion via ${method} (fonctionnalité à implémenter)`);
+    // Dans une vraie application, ici on déclencherait le processus d'authentification
+  };
 
-A [development build](/develop/development-builds/introduction/) is a debug version of our project. It is optimized for quick iterations when creating an app. It contains the [`expo-dev-client`](/versions/latest/sdk/dev-client/) library, which offers a robust and complete development environment. This setup allows us to integrate any native library or change code inside the [native directories](/workflow/overview/#android-and-ios-native-projects) as required.
+  // Icône SVG pour le logo (cerveau stylisé + coche + texte "SolvMe") - Design professionnel
+  const LogoIcon = ({ className = "w-24 h-24 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo SolvMe : Cerveau stylisé avec une coche et le texte SolvMe">
+      {/* Background shape for the brain - more rounded, modern blob */}
+      <path d="M80 10C50 10 25 35 25 65c0 20 10 38 25 48 5 3 10 5 15 5 5 0 10-1 15-3 5-2 9-4 12-7 3-3 5-7 6-11 1-4 1-8 0-12 -1-4-3-8-6-11 -3-3-7-5-10-7 -3-2-7-3-10-3 -3 0-7 1-10 3 -3 2-6 4-9 7 -3 3-5 7-6 11 -1 4-1 8 0 12 1 4 3 8 6 11 3 3 7 5 10 7 3 2 7 3 10 3 8 0 16-3 24-9 15-11 25-36 25-66C135 35 110 10 80 10z" fill="#20325b" /> {/* Dark blue brain shape */}
+      {/* Checkmark - thicker, more prominent */}
+      <path d="M60 70l15 15 30-30" stroke="#7ed6a8" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" /> {/* Soft Green checkmark */}
+      {/* "SolvMe" Text - adjusted size and position for better integration */}
+      <text x="80" y="145" textAnchor="middle" fontSize="32" fontWeight="bold" fill="#7ed6a8" fontFamily="Inter, sans-serif">SolvMe</text> {/* Soft Green text */}
+    </svg>
+  );
 
-### Key highlights
+  // Icône SVG pour l'utilisateur - Professionnel
+  const UserIcon = ({ className = "w-6 h-6 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône utilisateur">
+      <path d="M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z"></path>
+      <path d="M21 22v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+    </svg>
+  );
 
-> **Note:** If you are familiar with [Expo Go](/get-started/expo-go/), think of a development build as a customizable version of Expo Go that is unique to the requirements of a project.
+  // Icône SVG pour Juridique (gavel) - Professionnel
+  const LegalIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône juridique">
+      <path d="M14 10V4a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v6M15 16l-3 3-3-3M12 19l0 3M19 10h-2M7 10H5M12 2v2M12 10v2M12 16v-2M12 22v-2"></path>
+      <path d="M12 10a4 4 0 0 0 4 4c.83 0 1.6-.2 2.29-.58L21 16l-3 3-3-3-3 3-3-3-3 3 2.71-1.58A4 4 0 0 0 8 14a4 4 0 0 0 4-4z"></path>
+    </svg>
+  );
 
-| Feature                           | Development Builds                                                                                                                             | Expo Go                                                                                              |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Development phase**             | Offers web-like iteration speed for mobile app development.                                                                                    | Allows for quick iteration and testing of Expo SDK projects using the client app.                    |
-| **Collaboration**                 | Facilitates team testing with shared native runtime.                                                                                           | Easy project sharing via QR codes on a device.                                                       |
-| **Third-party libraries support** | Full support for any [third-party library](/workflow/using-libraries/#third-party-libraries), including those that require custom native code. | Limited to libraries within the Expo SDK, not suitable for custom native dependencies.               |
-| **Customization**                 | Extensive customization with [config plugins](/config-plugins/introduction/) and direct access to native code.                                 | Limited customization with a focus on Expo SDK capabilities without direct native code modification. |
-| **Intended use**                  | Ideal for full-fledged app development aimed at store deployment, offering a complete development environment and tools.                       | Ideal for learning, prototyping, and experimenting. Not recommended for production apps.             |
+  // Icône SVG pour Financier (graphique à barres) - Professionnel
+  const FinanceIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône financier">
+      <path d="M12 20V10M18 20V4M6 20v-4M3 8h18M3 12h18M3 16h18M3 20h18"></path>
+    </svg>
+  );
 
-<Step label="1">
+  // Icône SVG pour Personnel (personne avec un cœur) - Professionnel
+  const PersonalIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône personnel">
+      <circle cx="12" cy="7" r="4"></circle>
+      <path d="M12 15c-3.3 0-6 2.7-6 6h12c0-3.3-2.7-6-6-6z"></path>
+      <path d="M12 12.5l-1 1-1-1M12 12.5l1 1 1-1"></path>
+    </svg>
+  );
 
-## Install expo-dev-client library
+  // NOUVELLE ICÔNE SVG POUR LE SPORT (personne qui court)
+  const SportIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône sport">
+      <path d="M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+      <path d="M14.5 12.5L11 16H6l-2 4"></path>
+      <path d="M14 22l-1-4 2-4 4-1 3 2 2 3"></path>
+    </svg>
+  );
 
-To initialize our project for a development build, let's [`cd`](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Understanding_client-side_tools/Command_line#basic_built-in_terminal_commands) inside our project directory and run the following command to install the library:
+  // Icône SVG pour Historique (horloge avec flèche) - Professionnel
+  const HistoryIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône historique">
+      <path d="M12 2v10l4 4M21.42 10.97a9 9 0 1 0-5.93 8.18"></path>
+      <path d="M22 10l-2-2-2 2"></path>
+    </svg>
+  );
 
-<Terminal cmd={['$ npx expo install expo-dev-client']} />
+  // Icône SVG pour Rendez-vous (calendrier) - Professionnel
+  const AppointmentIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône rendez-vous">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+      <path d="M12 15h.01"></path>
+      <path d="M16 15h.01"></path>
+      <path d="M8 15h.01"></path>
+      <path d="M12 18h.01"></path>
+      <path d="M16 18h.01"></path>
+      <path d="M8 18h.01"></path>
+    </svg>
+  );
 
-### Start the development server
+  // Icône SVG pour Documents (fichier) - Professionnel
+  const DocumentIcon = ({ className = "w-16 h-16 text-solvme-softGreen" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Icône documents">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <line x1="10" y1="9" x2="8" y2="9"></line>
+    </svg>
+  );
 
-Run the `npx expo start` to start the [development server](/get-started/start-developing/#start-a-development-server):
 
-<Terminal cmd={['$ npx expo start']} />
+  // Composant pour l'écran d'accueil
+  const HomeScreen = () => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-5 font-inter relative" style={{
+      background: 'linear-gradient(to bottom, #20325b, #1a2a4b)' // Dégradé de bleu foncé comme fallback
+    }}>
+      {/* Image de fond avec opacité */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-30" // Opacité ajustée pour la lisibilité
+        style={{ backgroundImage: `url(https://storage.googleapis.com/gemini-generated-images/Gemini_Generated_Image_m44tpkm44tpkm44t.jpg-f93dd753-85be-4e79-b9d6-b9113527e1d2)` }}
+      ></div>
+      {/* Contenu de l'écran d'accueil par-dessus l'image de fond */}
+      <div className="relative z-10 flex flex-col items-center justify-around flex-grow w-full max-w-md">
+        {/* Logo et Slogan */}
+        <div className="flex flex-col items-center mb-12 mt-8 md:mt-0">
+          <LogoIcon className="w-40 h-40 text-solvme-softGreen" /> {/* Utilisation de l'icône SVG avec le texte */}
+          <h1 className="text-white text-3xl font-bold text-center leading-tight">
+            L'app qui résout tes problèmes en 24h
+          </h1>
+        </div>
 
-This command starts the metro bundler. In the terminal window, we see the QR code followed by the `Metro waiting on...` and a manifest URL:
+        {/* Bouton principal "Décrire mon problème" */}
+        <button
+          onClick={handleDescribeProblem}
+          className="bg-solvme-softGreen text-solvme-darkBlue px-10 py-4 rounded-full text-lg font-bold shadow-xl transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-softGreen focus:ring-opacity-50 w-4/5 max-w-xs mb-8"
+          style={{ backgroundColor: '#7ed6a8', color: '#20325b' }}
+        >
+          Décrire mon problème
+        </button>
 
-<ContentSpotlight
-  alt="Running development server"
-  src="/static/images/tutorial/eas/development-server.png"
-  className="max-w-[600px]"
-/>
+        {/* Liens secondaires */}
+        <div className="flex flex-col items-center w-full mb-8">
+          <button
+            onClick={handleGoToExperts}
+            className="text-white text-base mb-3 hover:underline"
+          >
+            Voir nos experts
+          </button>
+          <button
+            onClick={handleGoToPricing}
+            className="text-white text-base mb-3 hover:underline"
+          >
+            Voir nos tarifs
+          </button>
+          <button
+            onClick={handleGoToUserSpace}
+            className="text-white text-base hover:underline"
+          >
+            Mon Espace
+          </button>
+        </div>
 
-Let's notice the changes installing the `expo-dev-client` library:
 
-- The manifest URL contains `expo-development-client` along with the app scheme
-- The development server now operates for a development build (instead of Expo Go).
+        {/* Options de login */}
+        <div className="w-full flex flex-col items-center">
+          <p className="text-solvme-lightGray text-base mb-4" style={{ color: '#f0f0f0' }}>
+            Déjà un compte ? Connectez-vous :
+          </p>
+          <div className="flex justify-around w-11/12 max-w-sm">
+            <button
+              onClick={() => handleLogin('Google')}
+              className="bg-solvme-darkBlue border border-solvme-softGreen text-solvme-softGreen px-5 py-3 rounded-full text-sm font-semibold shadow-md transition duration-300 ease-in-out transform hover:bg-solvme-softGreen hover:text-solvme-darkBlue focus:outline-none focus:ring-2 focus:ring-solvme-softGreen focus:ring-opacity-75 mx-1 flex-1"
+              style={{ backgroundColor: '#20325b', borderColor: '#7ed6a8', color: '#7ed6a8' }}
+            >
+              Google
+            </button>
+            <button
+              onClick={() => handleLogin('Email')}
+              className="bg-solvme-darkBlue border border-solvme-softGreen text-solvme-softGreen px-5 py-3 rounded-full text-sm font-semibold shadow-md transition duration-300 ease-in-out transform hover:bg-solvme-softGreen hover:text-solvme-darkBlue focus:outline-none focus:ring-2 focus:ring-solvme-softGreen focus:ring-opacity-75 mx-1 flex-1"
+              style={{ backgroundColor: '#20325b', borderColor: '#7ed6a8', color: '#7ed6a8' }}
+            >
+              Email
+            </button>
+            <button
+              onClick={() => handleLogin('Numéro')}
+              className="bg-solvme-darkBlue border border-solvme-softGreen text-solvme-softGreen px-5 py-3 rounded-full text-sm font-semibold shadow-md transition duration-300 ease-in-out transform hover:bg-solvme-softGreen hover:text-solvme-darkBlue focus:outline-none focus:ring-2 focus:ring-solvme-softGreen focus:ring-opacity-75 mx-1 flex-1"
+              style={{ backgroundColor: '#20325b', borderColor: '#7ed6a8', color: '#7ed6a8' }}
+            >
+              Numéro
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-Since we do not have a development build installed on one of our devices or an emulator/simulator, we can't run our project yet.
+  // Composant pour le diagnostic IA
+  const ProblemDiagnosticScreen = ({ onBack, problemDescription, setProblemDescription, aiResponse, setAiResponse }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-</Step>
+    // États pour la génération de documents
+    const [documentType, setDocumentType] = useState('');
+    const [generatedDocument, setGeneratedDocument] = useState('');
+    const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
+    const [documentError, setDocumentError] = useState('');
+    // Nouveaux états pour l'ajustement du ton du document
+    const [toneAdjustmentInput, setToneAdjustmentInput] = useState('');
+    const [tonedDocument, setTonedDocument] = useState('');
+    const [isAdjustingTone, setIsAdjustingTone] = useState(false);
+    const [toneError, setToneError] = useState('');
+    // Nouveaux états pour la vérification de conformité/légale
+    const [complianceCheckResult, setComplianceCheckResult] = useState('');
+    const [isCheckingCompliance, setIsCheckingCompliance] = useState(false);
+    const [complianceError, setComplianceError] = useState('');
 
-<Step label="2">
 
-## Initialize a development build
+    // États pour la clarification de problème
+    const [clarifyingQuestions, setClarifyingQuestions] = useState('');
+    const [isRefiningProblem, setIsRefiningProblem] = useState(false);
+    const [refinementError, setRefinementError] = useState('');
 
-### Install EAS CLI
+    // États pour le choix guidé
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [guidedQuestions, setGuidedQuestions] = useState('');
+    const [isGettingGuidedQuestions, setIsGettingGuidedQuestions] = useState(false);
+    const [guidedQuestionsError, setGuidedQuestionsError] = useState('');
 
-We need to install the EAS Command Line Interface (CLI) tool as a global dependency on our local machine. Run the following command:
+    // États pour la consultation expert
+    const [expertSummary, setExpertSummary] = useState('');
+    const [isSummarizingForExpert, setIsSummarizingForExpert] = useState(false);
+    const [expertSummaryError, setExpertSummaryError] = useState('');
 
-<Terminal cmd={['$ npm install -g eas-cli']} />
+    // États pour l'évaluation de faisabilité
+    const [feasibilityAssessment, setFeasibilityAssessment] = useState('');
+    const [isAssessingFeasibility, setIsAssessingFeasibility] = useState(false);
+    const [feasibilityError, setFeasibilityError] = useState('');
 
-### Log in or sign up for an Expo account
+    // États pour la recommandation d'experts par IA
+    const [recommendedExperts, setRecommendedExperts] = useState([]);
+    const [isMatchingExperts, setIsMatchingExperts] = useState(false);
+    const [expertMatchingError, setExpertMatchingError] = useState('');
 
-> If you have an Expo account and are signed in using Expo CLI, skip this step. If you don't have an Expo account, [sign up here](https://expo.dev/signup) and proceed with the login command described below.
+    // États pour le raffinement de solution par IA
+    const [refinementInput, setRefinementInput] = useState('');
+    const [refinedSolution, setRefinedSolution] = useState('');
+    const [isRefiningSolution, setIsRefiningSolution] = useState(false);
+    const [refinementSolutionError, setRefinementSolutionError] = useState('');
 
-To log in, run the following command:
+    // États pour les plans d'action alternatifs
+    const [alternativePlans, setAlternativePlans] = useState([]);
+    const [isGeneratingAlternatives, setIsGeneratingAlternatives] = useState(false);
+    const [alternativePlansError, setAlternativePlansError] = useState('');
 
-<Terminal cmd={['$ eas login']} />
+    // Nouveaux états pour l'analyse de scénarios "Et si..."
+    const [whatIfInput, setWhatIfInput] = useState('');
+    const [whatIfAnalysis, setWhatIfAnalysis] = useState('');
+    const [isAnalyzingWhatIf, setIsAnalyzingWhatIf] = useState(false);
+    const [whatIfError, setWhatIfError] = useState('');
 
-This command asks for our Expo account email or username and password to complete the login.
+    // Nouveaux états pour la génération de synthèse exécutive
+    const [executiveSummary, setExecutiveSummary] = useState('');
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [summaryError, setSummaryError] = useState('');
 
-### Initialize and link the project to EAS
+    // Nouveaux états pour le brainstorming de solutions créatives
+    const [creativeSolutions, setCreativeSolutions] = useState('');
+    const [isBrainstorming, setIsBrainstorming] = useState(false);
+    const [brainstormingError, setBrainstormingError] = useState('');
 
-For any new project, the first step is to initialize and link it to the EAS servers. Run the following command:
 
-<Terminal cmd={['$ eas init']} />
+    const problemCategories = [
+      "Problème administratif", "Problème juridique", "Problème financier",
+      "Problème professionnel", "Problème personnel ou relationnel", "Projet à concrétiser",
+      "Problème sportif" // NOUVELLE CATÉGORIE
+    ];
 
-On running, this command:
+    const handleDiagnoseProblem = async () => {
+      if (!problemDescription.trim()) {
+        setError("Veuillez décrire votre problème avant de le diagnostiquer.");
+        return;
+      }
 
-- Requests verification of the account owner by entering our Expo account credentials and asks if we want to create a new EAS project:
+      setIsLoading(true);
+      setAiResponse('');
+      setError('');
+      setGeneratedDocument('');
+      setClarifyingQuestions('');
+      setGuidedQuestions('');
+      setExpertSummary('');
+      setFeasibilityAssessment('');
+      setRecommendedExperts([]);
+      setRefinedSolution('');
+      setTonedDocument('');
+      setAlternativePlans([]);
+      setComplianceCheckResult('');
+      setWhatIfAnalysis('');
+      setExecutiveSummary('');
+      setCreativeSolutions('');
 
-<Terminal
-  cmd={[
-    '# Output after running eas init',
-    '✔ Which account should own this project? > your-username',
-    '✔ Would you like to create a project for @your-username/sticker-smash? … yes',
-    '✔ Created @your-username/sticker-smash',
-    '✔ Project successfully linked (ID: XXXX-XX-XX-XXXX) (modified app.json)',
-  ]}
-/>
+      try {
+        let chatHistory = [];
+        let prompt = `En tant qu'assistant de résolution de problèmes, analyse le problème suivant et propose un plan d'action clair, étape par étape, ainsi que des types de documents suggérés qui pourraient être utiles.`;
+        if (selectedCategory) {
+          prompt += ` Le problème est de catégorie "${selectedCategory}" et est décrit comme suit : "${problemDescription}".`;
+        } else {
+          prompt += ` Le problème est : "${problemDescription}".`;
+        }
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
-- Creates EAS project and provides a link to that project which we can open in the EAS dashboard:
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-<ContentSpotlight
-  alt="New project in EAS dashboard"
-  src="/static/images/tutorial/eas/new-project.png"
-/>
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-- Generates a unique `projectId` and links this EAS project to the example app on our development machine.
-- Modifies **app.json** to include [`extra.eas.projectId`](/versions/latest/sdk/constants/#easconfig) and updates its value with the unique ID created.
+        const result = await response.json();
 
-<Collapsible summary={<>What is <CODE>projectId</CODE> in app.json?</>}>
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setAiResponse(text);
+        } else {
+          setError("Impossible d'obtenir une réponse de l'IA. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini:", err);
+        setError("Une erreur est survenue lors de la communication avec l'IA. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-When `eas init` runs, it associates a unique identifier for our project in **app.json** under `extra.eas.projectId`. The value of this property is used to identify our project on EAS servers.
+    const handleGenerateDocument = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setDocumentError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action.");
+        return;
+      }
+      if (!documentType.trim()) {
+        setDocumentError("Veuillez spécifier le type de document à générer (ex: 'Lettre de réclamation', 'Email de suivi').");
+        return;
+      }
 
-```json
-{
-  "extra": {
-    "eas": {
-      "projectId": "0cd3da2d-xxx-xxx-xxx-xxxxxxxxxx"
-    }
-  }
-}
-```
+      setIsGeneratingDocument(true);
+      setGeneratedDocument('');
+      setDocumentError('');
+      setTonedDocument('');
+      setComplianceCheckResult('');
 
-</Collapsible>
+      try {
+        let chatHistory = [];
+        const documentPrompt = `Basé sur le problème suivant : "${problemDescription}" et le plan d'action déjà généré : "${aiResponse}", rédige un brouillon de "${documentType}". Assure-toi que le contenu est pertinent et professionnel.`;
+        chatHistory.push({ role: "user", parts: [{ text: documentPrompt }] });
 
-</Step>
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-<Step label="3">
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-## Configure project for EAS Build
+        const result = await response.json();
 
-To set up our project for EAS Build, run the following command:
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setGeneratedDocument(text);
+        } else {
+          setDocumentError("Impossible de générer le document. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour document:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour document:", err);
+        setDocumentError("Une erreur est survenue lors de la génération du document. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsGeneratingDocument(false);
+      }
+    };
 
-<Terminal cmd={['$ eas build:configure']} />
+    // Nouvelle fonction pour ajuster le ton du document
+    const handleAdjustDocumentTone = async () => {
+      if (!generatedDocument.trim()) {
+        setToneError("Veuillez d'abord générer un document.");
+        return;
+      }
+      if (!toneAdjustmentInput.trim()) {
+        setToneError("Veuillez spécifier le ton souhaité (ex: 'plus formel', 'plus amical').");
+        return;
+      }
 
-On running, this command:
+      setIsAdjustingTone(true);
+      setTonedDocument('');
+      setToneError('');
 
-- Prompts to select a platform: **Android**, **iOS**, or **All**. Since we are creating Android and iOS apps, let's select **All**.
-- Creates **eas.json** in the root of our project's directory with the following configuration:
+      try {
+        let chatHistory = [];
+        const tonePrompt = `Réécris le document suivant avec un ton ${toneAdjustmentInput} : "${generatedDocument}"`;
+        chatHistory.push({ role: "user", parts: [{ text: tonePrompt }] });
 
-```json eas.json
-{
-  "cli": {
-    "version": ">= 14.2.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setTonedDocument(text);
+        } else {
+          setToneError("Impossible d'ajuster le ton du document. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour ajustement de ton:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour ajustement de ton:", err);
+        setToneError("Une erreur est survenue lors de l'ajustement du ton. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsAdjustingTone(false);
+      }
+    };
+
+    // Nouvelle fonction pour la vérification de conformité/légale
+    const handleLegalComplianceCheck = async () => {
+      if (!generatedDocument.trim() && !tonedDocument.trim()) {
+        setComplianceError("Veuillez générer ou ajuster un document avant d'effectuer une vérification.");
+        return;
+      }
+
+      setIsCheckingCompliance(true);
+      setComplianceCheckResult('');
+      setComplianceError('');
+
+      const documentToCheck = tonedDocument.trim() || generatedDocument.trim();
+
+      try {
+        let chatHistory = [];
+        const compliancePrompt = `Effectue une vérification de conformité/légale simplifiée sur le document suivant, en tenant compte du problème initial : "${problemDescription}". Indique les points potentiellement problématiques ou les éléments à vérifier impérativement par un expert légal.
+        Document: "${documentToCheck}"`;
+        chatHistory.push({ role: "user", parts: [{ text: compliancePrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setComplianceCheckResult(text);
+        } else {
+          setComplianceError("Impossible d'effectuer la vérification de conformité. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour conformité:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour conformité:", err);
+        setComplianceError("Une erreur est survenue lors de la vérification de conformité. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsCheckingCompliance(false);
+      }
+    };
+
+
+    const handleRefineProblem = async () => {
+      if (!problemDescription.trim()) {
+        setRefinementError("Veuillez décrire votre problème avant de demander des clarifications.");
+        return;
+      }
+
+      setIsRefiningProblem(true);
+      setClarifyingQuestions('');
+      setRefinementError('');
+
+      try {
+        let chatHistory = [];
+        const refinementPrompt = `Étant donné la description de problème suivante : "${problemDescription}", quelles questions de clarification spécifiques pourraient être posées à l'utilisateur pour rendre le problème plus précis et exploitable ? Fournissez ces questions sous forme de liste numérotée.`;
+        chatHistory.push({ role: "user", parts: [{ text: refinementPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setClarifyingQuestions(text);
+        } else {
+          setRefinementError("Impossible d'obtenir des questions de clarification. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour clarification:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour clarification:", err);
+        setRefinementError("Une erreur est survenue lors de la clarification du problème. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsRefiningProblem(false);
+      }
+    };
+
+    const handleCategorySelection = async (category) => {
+      setSelectedCategory(category);
+      setProblemDescription(''); // Réinitialiser la description pour la nouvelle catégorie
+      setAiResponse('');
+      setGeneratedDocument('');
+      setClarifyingQuestions('');
+      setGuidedQuestions('');
+      setGuidedQuestionsError('');
+      setExpertSummary('');
+      setFeasibilityAssessment('');
+      setRecommendedExperts([]);
+      setRefinedSolution('');
+      setTonedDocument('');
+      setAlternativePlans([]);
+      setComplianceCheckResult('');
+      setWhatIfAnalysis('');
+      setExecutiveSummary('');
+      setCreativeSolutions('');
+
+      setIsGettingGuidedQuestions(true);
+      try {
+        let chatHistory = [];
+        const guidedPrompt = `Je souhaite décrire un "${category}". Peux-tu me poser 3 à 5 questions courtes et précises pour m'aider à bien décrire ce type de problème ? Présente-les sous forme de liste numérotée.`;
+        chatHistory.push({ role: "user", parts: [{ text: guidedPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setGuidedQuestions(text);
+        } else {
+          setGuidedQuestionsError("Impossible d'obtenir des questions guidées. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour questions guidées:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour questions guidées:", err);
+        setGuidedQuestionsError("Une erreur est survenue lors de la récupération des questions guidées. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsGettingGuidedQuestions(false);
+      }
+    };
+
+    const handlePrepareExpertConsultation = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setExpertSummaryError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action pour préparer la consultation.");
+        return;
+      }
+
+      setIsSummarizingForExpert(true);
+      setExpertSummary('');
+      setExpertSummaryError('');
+
+      try {
+        let chatHistory = [];
+        const summaryPrompt = `Je souhaite parler à un expert humain. Voici mon problème : "${problemDescription}". Et voici le plan d'action que l'IA m'a proposé : "${aiResponse}". Peux-tu me générer un résumé concis de mon problème et des points clés du plan d'action, en environ 3-4 phrases, que je pourrais fournir à l'expert pour qu'il comprenne rapidement la situation ?`;
+        chatHistory.push({ role: "user", parts: [{ text: summaryPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setExpertSummary(text);
+        } else {
+          setExpertSummaryError("Impossible de générer le résumé pour l'expert. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour résumé expert:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour résumé expert:", err);
+        setExpertSummaryError("Une erreur est survenue lors de la préparation du résumé pour l'expert. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsSummarizingForExpert(false);
+      }
+    };
+
+    const handleAssessFeasibility = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setFeasibilityError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action pour évaluer sa faisabilité.");
+        return;
+      }
+
+      setIsAssessingFeasibility(true);
+      setFeasibilityAssessment('');
+      setFeasibilityError('');
+
+      try {
+        let chatHistory = [];
+        const assessmentPrompt = `Évalue la faisabilité du plan d'action suivant, proposé pour le problème décrit. Indique les défis potentiels, les ressources nécessaires (générales) et une estimation de la durée.
+        Problème: "${problemDescription}"
+        Plan d'action: "${aiResponse}"`;
+        chatHistory.push({ role: "user", parts: [{ text: assessmentPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setFeasibilityAssessment(text);
+        } else {
+          setFeasibilityError("Impossible d'évaluer la faisabilité. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour faisabilité:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour faisabilité:", err);
+        setFeasibilityError("Une erreur est survenue lors de l'évaluation de la faisabilité. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsAssessingFeasibility(false);
+      }
+    };
+
+    const handleMatchExperts = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setExpertMatchingError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action pour recommander des experts.");
+        return;
+      }
+
+      setIsMatchingExperts(true);
+      setRecommendedExperts([]);
+      setExpertMatchingError('');
+
+      try {
+        // Préparer la liste des experts pour le prompt
+        const expertsListForPrompt = expertsData.map(e => ({
+          id: e.id,
+          name: e.name,
+          category: e.category,
+          competence: e.competence
+        }));
+
+        let chatHistory = [];
+        const matchingPrompt = `Étant donné la description du problème de l'utilisateur : "${problemDescription}" et le plan d'action généré par l'IA : "${aiResponse}", recommande le ou les 1 à 2 experts les plus appropriés parmi la liste suivante. Pour chaque expert recommandé, fournis son ID et une brève justification (1-2 phrases) expliquant pourquoi il est un bon choix en fonction de ses compétences.
+        Experts disponibles: ${JSON.stringify(expertsListForPrompt)}`;
+        chatHistory.push({ role: "user", parts: [{ text: matchingPrompt }] });
+
+        const payload = {
+          contents: chatHistory,
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                recommendedExperts: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      expertId: { "type": "STRING" },
+                      justification: { "type": "STRING" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const jsonText = result.candidates[0].content.parts[0].text;
+          const parsedResult = JSON.parse(jsonText);
+          if (parsedResult.recommendedExperts) {
+            // Mapper les IDs recommandés aux objets experts complets
+            const matchedExperts = parsedResult.recommendedExperts.map(rec => {
+              const expert = expertsData.find(e => e.id === rec.expertId);
+              return expert ? { ...expert, justification: rec.justification } : null;
+            }).filter(Boolean); // Filtrer les null si un ID n'est pas trouvé
+            setRecommendedExperts(matchedExperts);
+          } else {
+            setExpertMatchingError("La structure de la réponse de l'IA est inattendue.");
+          }
+        } else {
+          setExpertMatchingError("Impossible d'obtenir des recommandations d'experts. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour recommandation:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour recommandation:", err);
+        setExpertMatchingError("Une erreur est survenue lors de la recommandation d'experts. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsMatchingExperts(false);
+      }
+    };
+
+    // Fonction pour raffiner la solution avec l'IA
+    const handleRefineSolution = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setRefinementSolutionError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action initial.");
+        return;
+      }
+      if (!refinementInput.trim()) {
+        setRefinementSolutionError("Veuillez saisir votre question ou demande de raffinement.");
+        return;
+      }
+
+      setIsRefiningSolution(true);
+      setRefinedSolution('');
+      setRefinementSolutionError('');
+
+      try {
+        let chatHistory = [];
+        const refinePrompt = `J'ai le problème suivant : "${problemDescription}". L'IA m'a proposé ce plan d'action initial : "${aiResponse}". Je souhaite maintenant affiner cette solution avec la question/demande suivante : "${refinementInput}". Peux-tu me fournir une version raffinée ou une réponse complémentaire basée sur cette nouvelle information ?`;
+        chatHistory.push({ role: "user", parts: [{ text: refinePrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setRefinedSolution(text);
+        } else {
+          setRefinementSolutionError("Impossible de raffiner la solution. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour raffinement:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour raffinement:", err);
+        setRefinementSolutionError("Une erreur est survenue lors du raffinement de la solution. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsRefiningSolution(false);
+      }
+    };
+
+    // Fonction pour générer des plans d'action alternatifs
+    const handleGenerateAlternativePlans = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setAlternativePlansError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action initial.");
+        return;
+      }
+
+      setIsGeneratingAlternatives(true);
+      setAlternativePlans([]);
+      setAlternativePlansError('');
+
+      try {
+        let chatHistory = [];
+        const alternativePrompt = `J'ai le problème suivant : "${problemDescription}". L'IA m'a déjà proposé ce plan d'action : "${aiResponse}". Peux-tu me proposer 2 ou 3 autres plans d'action distincts pour résoudre ce problème ? Présente chaque plan comme une nouvelle approche numérotée.`;
+        chatHistory.push({ role: "user", parts: [{ text: alternativePrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          // Split the response into individual plans if they are clearly separated (e.g., by "Plan 1:", "Plan 2:")
+          const plans = text.split(/Plan \d+:/).filter(p => p.trim() !== '').map(p => p.trim());
+          setAlternativePlans(plans.length > 0 ? plans : [text]); // Fallback to entire text if split fails
+        } else {
+          setAlternativePlansError("Impossible de générer des plans alternatifs. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour plans alternatifs:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour plans alternatifs:", err);
+        setAlternativePlansError("Une erreur est survenue lors de la génération des plans alternatifs. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsGeneratingAlternatives(false);
+      }
+    };
+
+    // Nouvelle fonction pour l'analyse de scénarios "Et si..."
+    const handleWhatIfScenario = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setWhatIfError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action.");
+        return;
+      }
+      if (!whatIfInput.trim()) {
+        setWhatIfError("Veuillez saisir votre scénario 'Et si...' (ex: 'Et si je ne parviens pas à l'étape 2 ?').");
+        return;
+      }
+
+      setIsAnalyzingWhatIf(true);
+      setWhatIfAnalysis('');
+      setWhatIfError('');
+
+      try {
+        let chatHistory = [];
+        const whatIfPrompt = `J'ai le problème suivant : "${problemDescription}". Le plan d'action actuel est : "${aiResponse}". Analyse le scénario suivant : "${whatIfInput}". Quelles seraient les conséquences, les risques ou les opportunités associés à ce scénario ?`;
+        chatHistory.push({ role: "user", parts: [{ text: whatIfPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setWhatIfAnalysis(text);
+        } else {
+          setWhatIfError("Impossible d'analyser le scénario 'Et si...'. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour 'Et si...':", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour 'Et si...':", err);
+        setWhatIfError("Une erreur est survenue lors de l'analyse du scénario 'Et si...'. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsAnalyzingWhatIf(false);
+      }
+    };
+
+    // Nouvelle fonction pour la génération de synthèse exécutive
+    const handleGenerateExecutiveSummary = async () => {
+      if (!problemDescription.trim() || !aiResponse.trim()) {
+        setSummaryError("Veuillez d'abord diagnostiquer votre problème et obtenir un plan d'action pour générer une synthèse.");
+        return;
+      }
+
+      setIsGeneratingSummary(true);
+      setExecutiveSummary('');
+      setSummaryError('');
+
+      try {
+        let chatHistory = [];
+        const summaryPrompt = `Basé sur le problème suivant : "${problemDescription}" et le plan d'action proposé : "${aiResponse}", génère une synthèse exécutive concise (environ 3-5 phrases). Cette synthèse doit être adaptée à un public de décideurs, mettant en évidence le problème, la solution clé et les bénéfices attendus.`;
+        chatHistory.push({ role: "user", parts: [{ text: summaryPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setExecutiveSummary(text);
+        } else {
+          setSummaryError("Impossible de générer la synthèse exécutive. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour synthèse exécutive:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour synthèse exécutive:", err);
+        setSummaryError("Une erreur est survenue lors de la génération de la synthèse exécutive. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsGeneratingSummary(false);
+      }
+    };
+
+    // Nouvelle fonction pour le brainstorming de solutions créatives
+    const handleBrainstormCreativeSolutions = async () => {
+      if (!problemDescription.trim()) {
+        setBrainstormingError("Veuillez décrire votre problème pour brainstormer des solutions créatives.");
+        return;
+      }
+
+      setIsBrainstorming(true);
+      setCreativeSolutions('');
+      setBrainstormingError('');
+
+      try {
+        let chatHistory = [];
+        const brainstormingPrompt = `J'ai le problème suivant : "${problemDescription}". Propose 3 à 5 solutions créatives ou non conventionnelles pour résoudre ce problème. Pensez "out of the box" et proposez des approches innovantes.`;
+        chatHistory.push({ role: "user", parts: [{ text: brainstormingPrompt }] });
+
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const text = result.candidates[0].content.parts[0].text;
+          setCreativeSolutions(text);
+        } else {
+          setBrainstormingError("Impossible de générer des solutions créatives. Veuillez réessayer.");
+          console.error("Structure de réponse inattendue de l'API Gemini pour brainstorming:", result);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'appel à l'API Gemini pour brainstorming:", err);
+        setBrainstormingError("Une erreur est survenue lors du brainstorming de solutions créatives. Veuillez vérifier votre connexion.");
+      } finally {
+        setIsBrainstorming(false);
+      }
+    };
+
+
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Diagnostic IA et Documents</h2>
+
+          {/* Bouton de retour */}
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          {/* Section Choix Guidé */}
+          <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Choix guidé du problème ✨</h3>
+          <div className="grid grid-cols-2 gap-2 w-full mb-6">
+            {problemCategories.map((category) => (
+              <button
+                key={category}
+                onClick={() => handleCategorySelection(category)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition duration-200 ${
+                  selectedCategory === category
+                    ? 'bg-solvme-softGreen text-solvme-darkBlue shadow-md'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {isGettingGuidedQuestions && (
+            <p className="text-gray-600 text-center mb-4">Chargement des questions...</p>
+          )}
+          {guidedQuestionsError && (
+            <p className="text-red-500 text-center mb-4">{guidedQuestionsError}</p>
+          )}
+          {guidedQuestions && (
+            <div className="bg-blue-100 p-4 rounded-lg w-full max-h-60 overflow-y-auto border border-blue-200 mb-6">
+              <h3 className="text-blue-800 text-lg font-semibold mb-3">Questions pour vous aider à décrire votre {selectedCategory} :</h3>
+              <p className="text-blue-700 whitespace-pre-wrap">{guidedQuestions}</p>
+            </div>
+          )}
+
+          {/* Section Description du Problème */}
+          <textarea
+            className="w-full p-4 border border-gray-300 rounded-lg mb-4 resize-y min-h-32 text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+            placeholder="Décrivez votre problème ici (ex: 'J'ai un litige avec mon propriétaire concernant un dépôt de garantie non remboursé.')"
+            value={problemDescription}
+            onChange={(e) => setProblemDescription(e.target.value)}
+          ></textarea>
+
+          {/* Boutons d'action pour le problème */}
+          <div className="flex flex-col sm:flex-row justify-between w-full mb-6 gap-3">
+            <button
+              onClick={handleDiagnoseProblem}
+              className="bg-solvme-softGreen text-solvme-darkBlue px-4 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-softGreen focus:ring-opacity-50 flex-1"
+              style={{ backgroundColor: '#7ed6a8', color: '#20325b' }}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Analyse en cours...' : 'Diagnostiquer ✨'}
+            </button>
+            <button
+              onClick={handleRefineProblem}
+              className="bg-gray-700 text-white px-4 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-700 focus:ring-opacity-50 flex-1"
+              style={{ backgroundColor: '#20325b', borderColor: '#7ed6a8', borderWidth: 1, color: '#7ed6a8' }}
+              disabled={isRefiningProblem}
+            >
+              {isRefiningProblem ? 'Affinement en cours...' : 'Affiner mon problème ✨'}
+            </button>
+          </div>
+
+          {error && (
+            <p className="text-red-500 text-center mb-4">{error}</p>
+          )}
+          {refinementError && (
+            <p className="text-red-500 text-center mb-4">{refinementError}</p>
+          )}
+
+          {/* Affichage des questions de clarification */}
+          {clarifyingQuestions && (
+            <div className="bg-blue-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-blue-200 mb-6">
+              <h3 className="text-blue-800 text-xl font-semibold mb-3">Questions pour affiner votre problème :</h3>
+              <p className="text-blue-700 whitespace-pre-wrap">{clarifyingQuestions}</p>
+            </div>
+          )}
+
+          {/* Affichage de la réponse IA (plan d'action) */}
+          {aiResponse && (
+            <div className="bg-solvme-lightGray p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-gray-200 mb-6">
+              <h3 className="text-solvme-darkBlue text-xl font-semibold mb-3">Plan d'action et documents suggérés :</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{aiResponse}</p>
+            </div>
+          )}
+
+          {/* Section Génération de Plans Alternatifs */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Explorer des plans alternatifs ✨</h3>
+              <button
+                onClick={handleGenerateAlternativePlans}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isGeneratingAlternatives}
+              >
+                {isGeneratingAlternatives ? 'Génération en cours...' : 'Générer des alternatives ✨'}
+              </button>
+
+              {alternativePlansError && (
+                <p className="text-red-500 text-center mb-4">{alternativePlansError}</p>
+              )}
+
+              {alternativePlans.length > 0 && (
+                <div className="bg-orange-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-orange-200 mb-6">
+                  <h3 className="text-orange-800 text-xl font-semibold mb-3">Plans d'action alternatifs :</h3>
+                  {alternativePlans.map((plan, index) => (
+                    <div key={index} className="mb-3 p-2 bg-orange-50 rounded-md">
+                      <p className="text-orange-700 whitespace-pre-wrap">**Plan alternatif {index + 1}:** {plan}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Raffinement de Solution par IA */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Affiner la solution avec l'IA 💡</h3>
+              <textarea
+                className="w-full p-3 border border-gray-300 rounded-lg mb-4 resize-y min-h-24 text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                placeholder="Posez une question de suivi ou demandez une approche différente (ex: 'Peux-tu détailler l'étape 3 ?', 'Existe-t-il une solution plus rapide ?')"
+                value={refinementInput}
+                onChange={(e) => setRefinementInput(e.target.value)}
+              ></textarea>
+              <button
+                onClick={handleRefineSolution}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isRefiningSolution || !refinementInput.trim()}
+              >
+                {isRefiningSolution ? 'Raffinement en cours...' : 'Affiner la solution ✨'}
+              </button>
+
+              {refinementSolutionError && (
+                <p className="text-red-500 text-center mb-4">{refinementSolutionError}</p>
+              )}
+
+              {refinedSolution && (
+                <div className="bg-blue-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-blue-200 mb-6">
+                  <h3 className="text-blue-800 text-xl font-semibold mb-3">Solution Raffinée :</h3>
+                  <p className="text-blue-700 whitespace-pre-wrap">{refinedSolution}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Analyse de Scénarios "Et si..." */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Analyse de Scénarios "Et si..." 🎲</h3>
+              <textarea
+                className="w-full p-3 border border-gray-300 rounded-lg mb-4 resize-y min-h-24 text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                placeholder="Ex: 'Et si je ne parviens pas à l'étape 2 ?', 'Et si les coûts sont plus élevés que prévu ?'"
+                value={whatIfInput}
+                onChange={(e) => setWhatIfInput(e.target.value)}
+              ></textarea>
+              <button
+                onClick={handleWhatIfScenario}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isAnalyzingWhatIf || !whatIfInput.trim()}
+              >
+                {isAnalyzingWhatIf ? 'Analyse en cours...' : 'Analyser le scénario ✨'}
+              </button>
+
+              {whatIfError && (
+                <p className="text-red-500 text-center mb-4">{whatIfError}</p>
+              )}
+
+              {whatIfAnalysis && (
+                <div className="bg-teal-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-teal-200 mb-6">
+                  <h3 className="text-teal-800 text-xl font-semibold mb-3">Analyse du scénario :</h3>
+                  <p className="text-teal-700 whitespace-pre-wrap">{whatIfAnalysis}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Génération de Synthèse Exécutive */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Générer une Synthèse Exécutive 📊</h3>
+              <button
+                onClick={handleGenerateExecutiveSummary}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isGeneratingSummary}
+              >
+                {isGeneratingSummary ? 'Génération en cours...' : 'Générer la synthèse ✨'}
+              </button>
+
+              {summaryError && (
+                <p className="text-red-500 text-center mb-4">{summaryError}</p>
+              )}
+
+              {executiveSummary && (
+                <div className="bg-blue-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-blue-200 mb-6">
+                  <h3 className="text-blue-800 text-xl font-semibold mb-3">Synthèse Exécutive :</h3>
+                  <p className="text-blue-700 whitespace-pre-wrap">{executiveSummary}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Brainstorming de Solutions Créatives */}
+          {problemDescription && ( // Peut être déclenché même sans plan d'action initial
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Brainstorming de Solutions Créatives 💡</h3>
+              <button
+                onClick={handleBrainstormCreativeSolutions}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isBrainstorming}
+              >
+                {isBrainstorming ? 'Brainstorming en cours...' : 'Brainstormer des solutions ✨'}
+              </button>
+
+              {brainstormingError && (
+                <p className="text-red-500 text-center mb-4">{brainstormingError}</p>
+              )}
+
+              {creativeSolutions && (
+                <div className="bg-purple-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-purple-200 mb-6">
+                  <h3 className="text-purple-800 text-xl font-semibold mb-3">Solutions Créatives :</h3>
+                  <p className="text-purple-700 whitespace-pre-wrap">{creativeSolutions}</p>
+                </div>
+              )}
+            </>
+          )}
+
+
+          {/* Section Évaluation de Faisabilité */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Évaluer la faisabilité du plan ✨</h3>
+              <button
+                onClick={handleAssessFeasibility}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isAssessingFeasibility}
+              >
+                {isAssessingFeasibility ? 'Évaluation en cours...' : 'Évaluer la faisabilité ✨'}
+              </button>
+
+              {feasibilityError && (
+                <p className="text-red-500 text-center mb-4">{feasibilityError}</p>
+              )}
+
+              {feasibilityAssessment && (
+                <div className="bg-yellow-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-yellow-200 mb-6">
+                  <h3 className="text-yellow-800 text-xl font-semibold mb-3">Évaluation de la faisabilité :</h3>
+                  <p className="text-yellow-700 whitespace-pre-wrap">{feasibilityAssessment}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Recommandation d'Experts par IA */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Trouver l'expert idéal par IA ✨</h3>
+              <button
+                onClick={handleMatchExperts}
+                className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                disabled={isMatchingExperts}
+              >
+                {isMatchingExperts ? 'Recherche en cours...' : 'Recommander des experts ✨'}
+              </button>
+
+              {expertMatchingError && (
+                <p className="text-red-500 text-center mb-4">{expertMatchingError}</p>
+              )}
+
+              {recommendedExperts.length > 0 && (
+                <div className="bg-purple-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-purple-200 mb-6">
+                  <h3 className="text-purple-800 text-xl font-semibold mb-3">Experts Recommandés :</h3>
+                  {recommendedExperts.map(expert => (
+                    <div key={expert.id} className="flex items-center bg-purple-50 p-3 rounded-lg mb-2 shadow-sm">
+                      {expert.category === 'Juridique' && <LegalIcon className="w-12 h-12 mr-3 text-purple-800" />}
+                      {expert.category === 'Financier' && <FinanceIcon className="w-12 h-12 mr-3 text-purple-800" />}
+                      {expert.category === 'Personnel' && <PersonalIcon className="w-12 h-12 mr-3 text-purple-800" />}
+                      {expert.category === 'Sport' && <SportIcon className="w-12 h-12 mr-3 text-purple-800" />} {/* NOUVELLE ICÔNE ICI */}
+                      {(!['Juridique', 'Financier', 'Personnel', 'Sport'].includes(expert.category)) && (
+                        <UserIcon className="w-12 h-12 mr-3 text-purple-800" />
+                      )}
+                      <div>
+                        <p className="text-purple-900 font-semibold">{expert.name} ({expert.category})</p>
+                        <p className="text-purple-700 text-sm">{expert.justification}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={handleGoToExperts}
+                    className="mt-4 bg-solvme-darkBlue text-solvme-softGreen px-6 py-2 rounded-full text-sm font-semibold hover:bg-solvme-softGreen hover:text-solvme-darkBlue transition duration-200"
+                  >
+                    Voir tous les experts
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+
+          {/* Section Préparation Consultation Expert (bouton pour le résumé) */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Préparer la consultation expert ?</h3>
+              <button
+                onClick={handlePrepareExpertConsultation}
+                className="bg-solvme-softGreen text-solvme-darkBlue px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-softGreen focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#7ed6a8', color: '#20325b' }}
+                disabled={isSummarizingForExpert}
+              >
+                {isSummarizingForExpert ? 'Préparation du résumé...' : 'Générer résumé pour expert ✨'}
+              </button>
+
+              {expertSummaryError && (
+                <p className="text-red-500 text-center mb-4">{expertSummaryError}</p>
+              )}
+
+              {expertSummary && (
+                <div className="bg-green-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-green-200 mb-6">
+                  <h3 className="text-green-800 text-xl font-semibold mb-3">Résumé pour votre expert :</h3>
+                  <p className="text-green-700 whitespace-pre-wrap">{expertSummary}</p>
+                  <p className="text-gray-600 text-sm mt-4">
+                    (Ceci est un résumé généré par l'IA. Vous pouvez maintenant chercher un expert et lui fournir ce texte.)
+                  </p>
+                  <button
+                    onClick={handleGoToExperts}
+                    className="mt-4 bg-solvme-darkBlue text-solvme-softGreen px-6 py-2 rounded-full text-sm font-semibold hover:bg-solvme-softGreen hover:text-solvme-darkBlue transition duration-200"
+                  >
+                    Voir les experts disponibles
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Section Génération de Document */}
+          {aiResponse && (
+            <>
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Générer un Document ✨</h3>
+              <input
+                type="text"
+                className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                placeholder="Ex: 'Lettre de réclamation', 'Email de suivi'"
+                value={documentType}
+                onChange={(e) => setDocumentType(e.target.value)}
+              />
+              <button
+                onClick={handleGenerateDocument}
+                className="bg-blue-500 text-white px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 mb-6"
+                style={{ backgroundColor: '#20325b' }}
+                disabled={isGeneratingDocument || !documentType.trim()}
+              >
+                {isGeneratingDocument ? 'Génération en cours...' : 'Générer ce document ✨'}
+              </button>
+
+              {documentError && (
+                <p className="text-red-500 text-center mb-4">{documentError}</p>
+              )}
+
+              {generatedDocument && (
+                <div className="bg-solvme-lightGray p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-gray-200">
+                  <h3 className="text-solvme-darkBlue text-xl font-semibold mb-3">Document Généré :</h3>
+                  <pre className="text-gray-700 whitespace-pre-wrap text-sm">{generatedDocument}</pre>
+                </div>
+              )}
+
+              {/* Section Ajustement du Ton du Document */}
+              {generatedDocument && (
+                <>
+                  <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Ajuster le ton du document ✨</h3>
+                  <input
+                    type="text"
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                    placeholder="Ex: 'plus formel', 'plus amical', 'plus assertif'"
+                    value={toneAdjustmentInput}
+                    onChange={(e) => setToneAdjustmentInput(e.target.value)}
+                  />
+                  <button
+                    onClick={handleAdjustDocumentTone}
+                    className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                    style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                    disabled={isAdjustingTone || !toneAdjustmentInput.trim()}
+                  >
+                    {isAdjustingTone ? 'Ajustement en cours...' : 'Ajuster le ton ✨'}
+                  </button>
+
+                  {toneError && (
+                    <p className="text-red-500 text-center mb-4">{toneError}</p>
+                  )}
+
+                  {tonedDocument && (
+                    <div className="bg-green-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-green-200">
+                      <h3 className="text-green-800 text-xl font-semibold mb-3">Document avec ton ajusté :</h3>
+                      <pre className="text-green-700 whitespace-pre-wrap text-sm">{tonedDocument}</pre>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Section Vérification de Conformité/Légale */}
+              {(generatedDocument || tonedDocument) && (
+                <>
+                  <h3 className="text-solvme-darkBlue text-xl font-bold mb-4 text-center">Vérification de Conformité/Légale ⚖️</h3>
+                  <button
+                    onClick={handleLegalComplianceCheck}
+                    className="bg-solvme-darkBlue text-solvme-softGreen px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-darkBlue focus:ring-opacity-50 mb-6"
+                    style={{ backgroundColor: '#20325b', color: '#7ed6a8' }}
+                    disabled={isCheckingCompliance}
+                  >
+                    {isCheckingCompliance ? 'Vérification en cours...' : 'Vérifier la conformité ✨'}
+                  </button>
+
+                  {complianceError && (
+                    <p className="text-red-500 text-center mb-4">{complianceError}</p>
+                  )}
+
+                  {complianceCheckResult && (
+                    <div className="bg-red-100 p-4 rounded-lg w-full max-h-96 overflow-y-auto border border-red-200">
+                      <h3 className="text-red-800 text-xl font-semibold mb-3">Résultat de la vérification :</h3>
+                      <p className="text-red-700 whitespace-pre-wrap text-sm">{complianceCheckResult}</p>
+                      <p className="text-gray-600 text-sm mt-4">
+                        (Cette vérification est simplifiée. Pour une analyse complète, consultez un expert juridique.)
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Données d'experts factices
+  const expertsData = [
+    {
+      id: 'exp1',
+      name: 'Dr. Émilie Dubois',
+      category: 'Juridique',
+      competence: 'Droit immobilier, Droit de la famille',
+      rating: 4.8,
+      tarif: 45,
+      avatar: '', // Sera remplacé par l'icône SVG
+      bio: "Avocate spécialisée en droit immobilier et familial, avec 10 ans d'expérience. J'aide mes clients à naviguer les complexités légales avec clarté et efficacité."
     },
-    "preview": {
-      "distribution": "internal"
+    {
+      id: 'exp2',
+      name: 'M. Jean Dupont',
+      category: 'Financier',
+      competence: 'Gestion de patrimoine, Optimisation fiscale',
+      rating: 4.7,
+      tarif: 50,
+      avatar: '', // Sera remplacé par l'icône SVG
+      bio: "Conseiller financier certifié, passionné par l'aide aux particuliers et entreprises pour atteindre leurs objectifs financiers. Expertise en investissement et planification de retraite."
     },
-    "production": {
-      "autoIncrement": true
+    {
+    id: 'exp3',
+    name: 'Mme. Sophie Martin',
+    category: 'Personnel',
+    competence: 'Coaching de vie, Gestion du stress',
+    rating: 4.9,
+    tarif: 40,
+    avatar: '', // Sera remplacé par l'icône SVG
+    bio: "Coach de vie certifiée, j'accompagne mes clients vers un épanouissement personnel et professionnel. Spécialisée dans la gestion du stress et le développement de la confiance en soi."
+    },
+    { // NOUVEL EXPERT SPORTIF
+      id: 'exp4',
+      name: 'M. David Leclerc',
+      category: 'Sport',
+      competence: 'Préparation physique, Nutrition sportive, Récupération',
+      rating: 4.6,
+      tarif: 35,
+      avatar: '', // Sera remplacé par l'icône SVG
+      bio: "Coach sportif et nutritionniste, j'aide les athlètes de tous niveaux à optimiser leurs performances et leur bien-être. Spécialisé dans la prévention des blessures et la récupération."
+    },
+  ];
+
+  // Composant pour la liste des experts
+  const ExpertConsultationScreen = ({ onBack, onSelectExpert }) => {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Nos Experts Humains</h2>
+
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          {/* Image d'illustration des experts (nouvelle image) */}
+          <img
+            src="https://storage.googleapis.com/gemini-generated-images/Gemini_Generated_Image_m44tplm44tplm44t.jpg-627fc8a7-49a2-4c33-a692-a35a09961aa9"
+            alt=""
+            className="w-full h-auto rounded-lg mb-6"
+          />
+
+          <div className="w-full space-y-4">
+            {expertsData.map(expert => (
+              <div
+                key={expert.id}
+                className="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-100 transition duration-200 cursor-pointer"
+                onClick={() => onSelectExpert(expert)}
+              >
+                {/* Utilisation des icônes SVG personnalisées pour les avatars d'experts */}
+                {expert.category === 'Juridique' && <LegalIcon className="w-16 h-16 mr-4 text-solvme-softGreen" />}
+                {expert.category === 'Financier' && <FinanceIcon className="w-16 h-16 mr-4 text-solvme-softGreen" />}
+                {expert.category === 'Personnel' && <PersonalIcon className="w-16 h-16 mr-4 text-solvme-softGreen" />}
+                {expert.category === 'Sport' && <SportIcon className="w-16 h-16 mr-4 text-solvme-softGreen" />} {/* NOUVELLE ICÔNE ICI */}
+                {/* Fallback si la catégorie n'est pas reconnue */}
+                {(!['Juridique', 'Financier', 'Personnel', 'Sport'].includes(expert.category)) && (
+                  <UserIcon className="w-16 h-16 mr-4 text-solvme-softGreen" /> // Fallback vers UserIcon
+                )}
+                <div className="flex-1">
+                  <h3 className="text-solvme-darkBlue text-lg font-semibold">{expert.name}</h3>
+                  <p className="text-gray-600 text-sm">{expert.category} - {expert.competence}</p>
+                  <p className="text-gray-500 text-xs">Note: {expert.rating} ⭐ | {expert.tarif}€/h</p>
+                </div>
+                <span className="text-solvme-softGreen text-2xl">›</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Composant pour la fiche détaillée d'un expert
+  const ExpertDetailScreen = ({ onBack, expert, onBookAppointment }) => {
+    if (!expert) {
+      return <p className="text-white">Aucun expert sélectionné.</p>;
     }
-  },
-  "submit": {
-    "production": {}
-  }
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Fiche Expert</h2>
+
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          <div className="flex flex-col items-center mb-6">
+            {/* Utilisation des icônes SVG personnalisées pour les avatars d'experts */}
+            {expert.category === 'Juridique' && <LegalIcon className="w-24 h-24 mb-4 border-4 border-solvme-softGreen shadow-md text-solvme-softGreen" />}
+            {expert.category === 'Financier' && <FinanceIcon className="w-24 h-24 mb-4 border-4 border-solvme-softGreen shadow-md text-solvme-softGreen" />}
+            {expert.category === 'Personnel' && <PersonalIcon className="w-24 h-24 mb-4 border-4 border-solvme-softGreen shadow-md text-solvme-softGreen" />}
+            {expert.category === 'Sport' && <SportIcon className="w-24 h-24 mb-4 border-4 border-solvme-softGreen shadow-md text-solvme-softGreen" />} {/* NOUVELLE ICÔNE ICI */}
+            {(!['Juridique', 'Financier', 'Personnel', 'Sport'].includes(expert.category)) && (
+              <UserIcon className="w-24 h-24 mb-4 border-4 border-solvme-softGreen shadow-md text-solvme-softGreen" /> // Fallback vers UserIcon
+            )}
+            <h3 className="text-solvme-darkBlue text-xl font-bold">{expert.name}</h3>
+            <p className="text-gray-700 text-md text-center">{expert.category} - {expert.competence}</p>
+            <p className="text-gray-600 text-sm">Note: {expert.rating} ⭐</p>
+            <p className="text-solvme-darkBlue text-lg font-bold mt-2">{expert.tarif}€ / heure</p>
+          </div>
+
+          <div className="w-full mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="text-solvme-darkBlue text-lg font-semibold mb-2">À propos de l'expert :</h4>
+            <p className="text-gray-700 text-sm leading-relaxed">{expert.bio}</p>
+          </div>
+
+          <button
+            onClick={() => onBookAppointment(expert)}
+            className="bg-solvme-softGreen text-solvme-darkBlue px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-softGreen focus:ring-opacity-50 w-full"
+            style={{ backgroundColor: '#7ed6a8', color: '#20325b' }}
+          >
+            Prendre rendez-vous
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Composant pour la prise de rendez-vous et le paiement
+  const BookingScreen = ({ onBack, expert, problemDescription, aiResponse }) => {
+    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
+    const [communicationMode, setCommunicationMode] = useState('chat');
+    const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+    const [bookingError, setBookingError] = useState('');
+
+    const handleConfirmPayment = () => {
+      if (!selectedDate || !selectedTime) {
+        setBookingError("Veuillez sélectionner une date et une heure pour le rendez-vous.");
+        return;
+      }
+      // Simulation de paiement
+      setBookingError('');
+      setPaymentConfirmed(true);
+      console.log('Rendez-vous confirmé et paiement simulé !');
+      // Dans une vraie app, ici on appellerait Stripe/PayDunya
+    };
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Prendre RDV avec {expert.name}</h2>
+
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          <img
+            src="https://placehold.co/200x100/20325b/7ed6a8?text=RDV"
+            alt=""
+            className="w-full h-auto rounded-lg mb-6"
+          />
+
+          {!paymentConfirmed ? (
+            <>
+              <div className="w-full mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Date du rendez-vous :</label>
+                <input
+                  type="date"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+              </div>
+              <div className="w-full mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Heure du rendez-vous :</label>
+                <input
+                  type="time"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-solvme-softGreen"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                />
+              </div>
+
+              <div className="w-full mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Mode de communication :</label>
+                <div className="flex space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio text-solvme-darkBlue"
+                      name="communicationMode"
+                      value="chat"
+                      checked={communicationMode === 'chat'}
+                      onChange={(e) => setCommunicationMode(e.target.value)}
+                    />
+                    <span className="ml-2 text-gray-700">Chat</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio text-solvme-darkBlue"
+                      name="communicationMode"
+                      value="visio"
+                      checked={communicationMode === 'visio'}
+                      onChange={(e) => setCommunicationMode(e.target.value)}
+                    />
+                    <span className="ml-2 text-gray-700">Visio</span>
+                  </label>
+                </div>
+              </div>
+
+              {bookingError && (
+                <p className="text-red-500 text-center mb-4">{bookingError}</p>
+              )}
+
+              <button
+                onClick={handleConfirmPayment}
+                className="bg-solvme-softGreen text-solvme-darkBlue px-8 py-3 rounded-full text-base font-bold shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-solvme-softGreen focus:ring-opacity-50 w-full"
+                style={{ backgroundColor: '#7ed6a8', color: '#20325b' }}
+              >
+                Confirmer et Payer ({expert.tarif}€)
+              </button>
+            </>
+          ) : (
+            <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+              <h3 className="text-green-700 text-xl font-bold mb-3">Rendez-vous confirmé ! 🎉</h3>
+              <p className="text-gray-700 mb-2">Votre rendez-vous avec <span className="font-semibold">{expert.name}</span> est prévu le <span className="font-semibold">{selectedDate} à {selectedTime}</span> en <span className="font-semibold">{communicationMode}</span>.</p>
+              <p className="text-gray-600 text-sm">Vous recevrez une notification de rappel.</p>
+              <button
+                onClick={onBack}
+                className="mt-6 bg-solvme-darkBlue text-solvme-softGreen px-6 py-2 rounded-full text-sm font-semibold hover:bg-solvme-softGreen hover:text-solvme-darkBlue transition duration-200"
+              >
+                Retour aux experts
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Composant pour l'écran des tarifs
+  const PricingScreen = ({ onBack }) => {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Nos Tarifs</h2>
+
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          <img
+            src="https://placehold.co/200x100/7ed6a8/20325b?text=Tarifs"
+            alt=""
+            className="w-full h-auto rounded-lg mb-6"
+          />
+
+          <div className="w-full space-y-6">
+            {/* Plan Gratuit */}
+            <div className="bg-gray-50 p-5 rounded-lg shadow-md border border-gray-200">
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-2">Gratuit</h3>
+              <p className="text-gray-700 mb-3">Accès limité à l'IA (nombre de messages/jour).</p>
+              <p className="text-solvme-softGreen text-2xl font-bold">0€ <span className="text-base text-gray-500">/ mois</span></p>
+              <button className="mt-4 bg-gray-300 text-gray-700 px-6 py-2 rounded-full text-sm font-semibold cursor-not-allowed">
+                Plan Actuel
+              </button>
+            </div>
+
+            {/* Consultation à la carte */}
+            <div className="bg-white p-5 rounded-lg shadow-md border border-solvme-softGreen">
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-2">Consultation à la carte</h3>
+              <p className="text-gray-700 mb-3">Accès complet à l'IA et consultations individuelles avec des experts.</p>
+              <p className="text-solvme-darkBlue text-2xl font-bold">10€ - 50€ <span className="text-base text-gray-500">/ consultation</span></p>
+              <button className="mt-4 bg-solvme-darkBlue text-solvme-softGreen px-6 py-2 rounded-full text-sm font-semibold hover:bg-solvme-softGreen hover:text-solvme-darkBlue transition duration-200">
+                Choisir ce plan
+              </button>
+            </div>
+
+            {/* Abonnement Premium */}
+            <div className="bg-white p-5 rounded-lg shadow-md border border-solvme-darkBlue">
+              <h3 className="text-solvme-darkBlue text-xl font-bold mb-2">Abonnement Premium</h3>
+              <p className="text-gray-700 mb-3">2 RDV inclus par mois avec un expert, accès illimité à l'IA.</p>
+              <p className="text-solvme-softGreen text-2xl font-bold">29€ <span className="text-base text-gray-500">/ mois</span></p>
+              <button className="mt-4 bg-solvme-darkBlue text-solvme-softGreen px-6 py-2 rounded-full text-sm font-semibold hover:bg-solvme-softGreen hover:text-solvme-darkBlue transition duration-200">
+                Choisir ce plan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Composant pour l'espace utilisateur
+  const UserSpaceScreen = ({ onBack }) => {
+    // Données factices pour l'historique, les documents et les rendez-vous
+    const userProfile = {
+      name: 'Utilisateur SolvMe',
+      email: 'utilisateur@example.com',
+      subscription: 'Gratuit',
+      // avatar: '', // Remplacé par UserIcon
+    };
+
+    const problemHistory = [
+      { id: 1, date: '2024-06-15', description: 'Litige avec mon fournisseur internet', solutionType: 'IA' },
+      { id: 2, date: '2024-05-20', description: 'Conseil pour création d\'entreprise', solutionType: 'Expert' },
+    ];
+
+    const generatedDocuments = [
+      { id: 1, name: 'Lettre de réclamation internet.pdf', date: '2024-06-16' },
+      { id: 2, name: 'Modèle de business plan.docx', date: '2024-05-21' },
+    ];
+
+    const appointments = [
+      { id: 1, date: '2024-07-05', time: '14:00', expert: 'Dr. Émilie Dubois', mode: 'Visio', status: 'À venir' },
+      { id: 2, date: '2024-05-25', time: '10:30', expert: 'M. Jean Dupont', mode: 'Chat', status: 'Passé' },
+    ];
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start p-5 font-inter" style={{
+        background: 'linear-gradient(to bottom, #20325b, #1a2a4b)'
+      }}>
+        <div className="flex flex-col items-center justify-start flex-grow w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-solvme-darkBlue text-2xl font-bold mb-6 text-center">Mon Espace</h2>
+
+          <button
+            onClick={onBack}
+            className="self-start mb-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition duration-200"
+          >
+            ← Retour
+          </button>
+
+          {/* Section Profil */}
+          <div className="w-full bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex items-center">
+            <UserIcon className="w-20 h-20 rounded-full mr-4 border-2 border-solvme-softGreen text-solvme-darkBlue" /> {/* Utilisation de l'icône SVG */}
+            <div>
+              <h3 className="text-solvme-darkBlue text-xl font-bold">{userProfile.name}</h3>
+              <p className="text-gray-700 text-sm">{userProfile.email}</p>
+              <p className="text-gray-600 text-xs">Abonnement : <span className="font-semibold">{userProfile.subscription}</span></p>
+              <button className="mt-2 text-solvme-softGreen text-sm hover:underline" onClick={handleGoToPricing}>Gérer mon abonnement</button>
+            </div>
+          </div>
+
+          {/* Historique des problèmes */}
+          <div className="w-full bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <h3 className="text-solvme-darkBlue text-xl font-bold mb-3">Historique des problèmes</h3>
+            <HistoryIcon className="w-16 h-16 text-solvme-softGreen mb-4" /> {/* Utilisation de l'icône SVG */}
+            {problemHistory.length > 0 ? (
+              <ul className="list-disc list-inside text-gray-700">
+                {problemHistory.map(problem => (
+                  <li key={problem.id} className="mb-1 text-sm">{problem.date}: {problem.description} ({problem.solutionType})</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600 text-sm">Aucun problème soumis pour l'instant.</p>
+            )}
+          </div>
+
+          {/* Rendez-vous */}
+          <div className="w-full bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <h3 className="text-solvme-darkBlue text-xl font-bold mb-3">Mes rendez-vous</h3>
+            <AppointmentIcon className="w-16 h-16 text-solvme-softGreen mb-4" /> {/* Utilisation de l'icône SVG */}
+            {appointments.length > 0 ? (
+              <ul className="list-disc list-inside text-gray-700">
+                {appointments.map(rdv => (
+                  <li key={rdv.id} className="mb-1 text-sm">{rdv.date} à {rdv.time} avec {rdv.expert} ({rdv.mode}) - <span className={rdv.status === 'À venir' ? 'text-green-600' : 'text-gray-500'}>{rdv.status}</span></li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600 text-sm">Aucun rendez-vous planifié.</p>
+            )}
+          </div>
+
+          {/* Documents générés */}
+          <div className="w-full bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <h3 className="text-solvme-darkBlue text-xl font-bold mb-3">Documents générés</h3>
+            <DocumentIcon className="w-16 h-16 text-solvme-softGreen mb-4" /> {/* Utilisation de l'icône SVG */}
+            {generatedDocuments.length > 0 ? (
+              <ul className="list-disc list-inside text-gray-700">
+                {generatedDocuments.map(doc => (
+                  <li key={doc.id} className="mb-1 text-sm">{doc.name} ({doc.date})</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600 text-sm">Aucun document généré pour l'instant.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+  // Logique de rendu de la page actuelle
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomeScreen />;
+      case 'diagnostic':
+        return (
+          <ProblemDiagnosticScreen
+            onBack={() => setCurrentPage('home')}
+            problemDescription={problemDescription}
+            setProblemDescription={setProblemDescription}
+            aiResponse={aiResponse}
+            setAiResponse={setAiResponse}
+          />
+        );
+      case 'expertConsultation':
+        return (
+          <ExpertConsultationScreen
+            onBack={() => setCurrentPage('home')}
+            onSelectExpert={(expert) => {
+              setSelectedExpert(expert);
+              setCurrentPage('expertDetail');
+            }}
+          />
+        );
+      case 'expertDetail':
+        return (
+          <ExpertDetailScreen
+            onBack={() => setCurrentPage('expertConsultation')}
+            expert={selectedExpert}
+            onBookAppointment={(expert) => {
+              setSelectedExpert(expert); // S'assurer que l'expert est bien passé
+              setCurrentPage('booking');
+            }}
+          />
+        );
+      case 'booking':
+        return (
+          <BookingScreen
+            onBack={() => setCurrentPage('expertConsultation')}
+            expert={selectedExpert}
+            problemDescription={problemDescription}
+            aiResponse={aiResponse}
+          />
+        );
+      case 'pricing':
+        return <PricingScreen onBack={() => setCurrentPage('home')} />;
+      case 'userSpace':
+        return <UserSpaceScreen onBack={() => setCurrentPage('home')} />;
+      default:
+        return <HomeScreen />;
+    }
+  };
+
+  return (
+    <>
+      {/* Intégration de Tailwind CSS via le CDN */}
+      <script src="https://cdn.tailwindcss.com"></script>
+      {/* Configuration de la police Inter */}
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+      {/* Styles Tailwind personnalisés pour les couleurs SolvMe */}
+      <style>{`
+        .font-inter {
+          font-family: 'Inter', sans-serif;
+        }
+        .bg-solvme-darkBlue { background-color: #20325b; }
+        .text-solvme-darkBlue { color: #20325b; }
+        .border-solvme-darkBlue { border-color: #20325b; }
+
+        .bg-solvme-softGreen { background-color: #7ed6a8; }
+        .text-solvme-softGreen { color: #7ed6a8; }
+        .border-solvme-softGreen { border-color: #7ed6a8; }
+
+        .text-solvme-lightGray { color: #f0f0f0; }
+        .bg-solvme-lightGray { background-color: #f0f0f0; }
+      `}</style>
+
+      {renderPage()}
+    </>
+  );
 }
-```
-
-This is the default configuration for **eas.json** in a new project. It does two things:
-
-- Defines the current EAS CLI version.
-- Adds three [build profiles](/build/eas-json/#build-profiles): `development`, `preview`, and `production`.
-
-</Step>
-
-<Collapsible summary="Explore development profile further">
-
-**eas.json** is a collection of different build profiles. Each profile is tailored with distinct configurations to produce specific build types. These profiles can also include platform-specific settings for Android or iOS.
-
-Currently, our focus is on the `development` profile, which includes the following configuration:
-
-- [`developmentClient`](/eas/json/#developmentclient): Enabled (`true`) for creating a debug build. It loads the app using the `expo-dev-client` library, which provides development tools and generates a build artifact for device or emulator/simulator installation and allows using the app for local development as it supports updating the JavaScript on the fly.
-- [`distribution`](/eas/json/#distribution): Configured as `internal` to indicate that we want to share the build internally (instead of uploading it on app stores).
-
-> **Note**: Builds offer extensive customization options, including platform-specific settings and the ability to extend configurations across different build profiles. Learn more about [customizing build profiles](/build/eas-json/#build-profiles).
-
-</Collapsible>
-
-## Summary
-
-<ProgressTracker
-  currentChapterIndex={0}
-  name="EAS_TUTORIAL"
-  summary="
-We successfully used the EAS CLI to initialize, and configure our project, link it to EAS servers, and prepare a development build."
-  nextChapterDescription="In the next chapter, let's create a development build for Android, install it on a device and an emulator, and get it running with the development server."
-  nextChapterTitle="Create and run a cloud build for Android"
-  nextChapterLink="/tutorial/eas/android-development-build/"
-/>
